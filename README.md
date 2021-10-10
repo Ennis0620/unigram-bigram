@@ -1,6 +1,112 @@
-# unigram-bigram
-一元語法 和 二元語法模型  並用貪婪法找目前可以選擇路徑中 機率最高的
+巨量資料-二元語法模型建立
+===
 
-透過tkinter 讓使用者輸入 一串文章 會有 正向 反向 bigram機率 斷詞後的結果
 
-model:https://drive.google.com/drive/folders/1fQDCNLvKZkpB7chWHEaDV4XZx39GPGDn?usp=sharing
+二元語法模型:
+
+https://drive.google.com/drive/folders/1fQDCNLvKZkpB7chWHEaDV4XZx39GPGDn?usp=sharing
+
+---
+# Introduction
+建立二元語法模型，並使用完全切分法弄出詞網，用貪婪法找出機率大的分詞，透過由tkinter建立的GUI(包含正、反向匹配)讓使用者對文章做斷詞。
+
+---
+
+# Detail
+</br>
+讀檔:
+
+1.讀取30萬常用字辭典，並在讀取時紀錄最長字數(優化關鍵)。
+
+2.計算巨量資料內所有字詞出現次數用dic存(一元語法)。
+
+</br>
+
+### 建立二元語法:
+
+1.在完整句子的最前面加上< s >、最後面加上< / s >  。
+
+    ex.[ < s >,項目,的,研究,< / s >]
+
+2.將句子前後關係用下列方式表示，為二元語法字典的key，並記錄出現次數。
+
+    ex.項目|<s>,的|項目,研究|的,</s>|研究
+
+3.計算該詞接在某詞後出現次數/總出現次數機率，建立二元語法模型。
+
+    ex. ("的" 後面接 "研究" 的次數)/"研究"總出現次數
+
+
+
+### 完全切分詞網:
+切出句子所有的可能字詞，依據紀錄最長字數來限制找詞的長度，加快切分速度。
+
+    ex. 詞網[[項,項目],[目,目的],[的],[研,研究],[究]]
+
+
+### 貪婪法找句子組合:
+	去二元語法模型找是否有這種開頭，若沒有就設一個很小的機率。
+
+    ex. 項|<s>   項目|<s>
+
+找該字詞後面接其他詞的機率。
+
+    ex. 目|項  目的|項 
+先計算一種開頭的機率乘法，並取出較有可能的。
+    
+    ex. (項|<s>)*(目|項) or (項|<s>)*(目的|項)
+    
+</br>
+依序2~3步驟找出第一種開頭的最高機率。
+
+第二、三…開頭也依照2~4步驟找出該開頭機率。
+
+    ex.  項,……   項目,……
+	
+根據上述的結果取出機率最高的組合。
+</br>
+### 計算Recall、accuracy、F1:
+	
+依照前、後向最長匹配的方式計算這些指標。
+
+# Demo
+
+二元語法模型貪婪法結果
+
+![](https://i.imgur.com/cwPt5a4.png)
+
+</br>
+
+結合前、後向最常匹配，以tkinter顯示，使用者可以輸入文章進行斷詞
+![](https://i.imgur.com/OGldYsT.png)
+
+# Requirement
+    
+    json
+    tkinter
+    re
+    
+# Package
+    uni_and_bi
+        ├─GUI
+        │      GUI_int.py                    GUI介面
+        │      lexicon1_raw_nosil.txt        常用30萬字辭典
+        │      word_segment.py               正、反向分割以及二元語法貪婪切分模組
+        │              
+        └─model_bulid
+                bulid_model_and_save.py     二元語法建立
+                pro_dic.json                紀錄所有出現詞彙
+                read_model_to_seg.py        完全切分、貪婪法組合二元語法模型
+                read_pro_dic_draw.py        畫出出現詞彙由最高到最低
+                
+# Problems
+1.如何加快完全切分速度
+
+2.如何避免稀疏矩陣造成記憶體不足
+
+3.貪婪法效果不太好
+
+# Solve
+1.紀錄常用字辭典裡面最長單字數
+
+2.使用字典儲存每項機率
